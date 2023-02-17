@@ -25,8 +25,6 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({server});
 
 let tagId
-let studentId
-
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('Client connected.');
@@ -36,14 +34,13 @@ wss.on('connection', (ws) => {
       console.log(`Received tag Id: ${message}`);
       ws.send('GREEN_ON'); // turn the green LED on
       ws.send('GREEN_OFF'); // turn the green LED off
-      console.log("Light on") 
+      console.log("Green Light on") 
 
       global.tagId = message
       
       if (!message) {
         ws.send('RED_ON'); // turn the red LED on
-        ws.send('RED_OFF'); // turn the red LED off
-        console.log("Light off")
+        console.log("Red Light on")
       }
     // Broadcast tag Id to all connected clients
     wss.clients.forEach((client) => {
@@ -59,7 +56,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-console.log(tagId)
+
 // Index page
 app.get('/', (req, res) => {
   try {
@@ -82,10 +79,11 @@ app.get('/students', async (req, res) => {
 
 // Get a students !
 app.get('/students/:tagId', async (req, res) => {
+  const tagId = tagId;
   try {
     const student = await Student.findById(tagId)
     if (!student) throw new Error('No student found');
-    res.json(student);
+    res.status(201).json(student);
   } catch (err) {
     res.status(404).json(err);
   }
@@ -112,7 +110,7 @@ app.post('/students', async (req, res) => {
 //Reset attendance for a student !
 app.put('/students/reset', async (req, res) => {
     try {
-      const updateStudent = await Student.findByIdAndUpdate(tagId, req.body, {attendance :false});
+      const updateStudent = await Student.updateMany({attendance : true}, {attendance : false});
       res.status(201).send(updateStudent)
     } catch (err) {
       console.log(err);
