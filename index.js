@@ -100,7 +100,8 @@ app.post('/students', (req, res) => {
     name: req.body.name,
     level: req.body.level,
     attendance: req.body.attendance,
-    tagId: req.body.tagId
+    tagId: req.body.tagId,
+    matricNo: req.body.matricNo
   });
   student.save((err) => {
     if (err) {
@@ -144,8 +145,6 @@ app.delete('/students/:tagId', (req, res) => {
     }
   });
 });
-
-
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}.`);

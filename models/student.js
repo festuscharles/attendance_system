@@ -13,6 +13,11 @@ const studentSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    matricNo: {
+        type: String,
+        required: true,
+        unique: true
+    },
     attendance: { 
         type: Boolean, 
         default: false 

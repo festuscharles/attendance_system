@@ -92,7 +92,7 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       if (strcmp((char*)payload, "ON") == 0) {
         ledState = true;
         digitalWrite(ledPin, HIGH);
-        delay(500)
+        delay(500);
         digitalWrite(ledPin, LOW);
       } else if (strcmp((char*)payload, "OFF") == 0) {
         ledState = false;
