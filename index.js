@@ -24,7 +24,9 @@ const server = http.createServer(app);
 // Create WebSocket server
 const wss = new WebSocket.Server({server});
 
-let tagId = ""
+let tagId
+let studentId
+
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('Client connected.');
@@ -32,26 +34,17 @@ wss.on('connection', (ws) => {
   // Handle incoming messages
   ws.on('message', (message) => {
       console.log(`Received tag Id: ${message}`);
-      ws.send('ON'); // turn the LED light on
-      console.log("Light on")
-      tagId = message
-      if(tagId !== "") {
-        Student.findOne( tagId , (err, student) => {
-      if (err) {
-        throw err
-      } else {
-        student.save((err) => {
-          if (err) throw err
-      else student.attendance = true
-        })
-      }
-    })
-} else {
-  ws.send('OFF'); // turn the LED light off
-  console.log("Light off")
-}
+      ws.send('GREEN_ON'); // turn the green LED on
+      ws.send('GREEN_OFF'); // turn the green LED off
+      console.log("Light on") 
 
-  
+      global.tagId = message
+      
+      if (!message) {
+        ws.send('RED_ON'); // turn the red LED on
+        ws.send('RED_OFF'); // turn the red LED off
+        console.log("Light off")
+      }
     // Broadcast tag Id to all connected clients
     wss.clients.forEach((client) => {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -65,37 +58,41 @@ wss.on('connection', (ws) => {
     console.log('Client disconnected.');
   });
 });
-   
+
+console.log(tagId)
 // Index page
 app.get('/', (req, res) => {
-  res.status(200).send("Index page");
+  try {
+    res.status(201).send("Index page");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Get all students
-app.get('/students', (req, res) => {
-  Student.find({}, (err, students) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(200).send(students);
-    }
-  });
+app.get('/students', async (req, res) => {
+  try {
+    const students = await Student.find({})
+    if (!students) throw new Error('No students found');
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(404).json(err);
+  }
 });
 
-// Get a students
-app.get('/students/:id', (req, res) => {
-  const tagId = tagId
-  Student.findById( tagId, (err, students) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(200).send(students);
-    }
-  });
+// Get a students !
+app.get('/students/:tagId', async (req, res) => {
+  try {
+    const student = await Student.findById(tagId)
+    if (!student) throw new Error('No student found');
+    res.json(student);
+  } catch (err) {
+    res.status(404).json(err);
+  }
 });
-
+    
 // Register a new student
-app.post('/students', (req, res) => {
+app.post('/students', async (req, res) => {
   const student = new Student({
     name: req.body.name,
     level: req.body.level,
@@ -103,47 +100,35 @@ app.post('/students', (req, res) => {
     tagId: req.body.tagId,
     matricNo: req.body.matricNo
   });
-  student.save((err) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(201).send(student);
-    }
-  });
-});
-
-
-//Reset attendance for a student
-app.put('/students/reset', (req, res) => {
-  Student.find({}, (err, student) => {
-    if (err) {
-      res.status(500).send(err);
-    } else if (student) {
-      student.save((err) => {
-        if (err) {
-            res.status(500).send(err)
-        } else {
-          student.attendance = false
-          res.status(200).send(student)
-        }
-    })
-    } else {
-        res.status(404).send({ message: 'Student not found' });
-    }
-  });
+  try {
+    await student.save((err) => {
+      res.status(201).json(student);
+    }) 
+  } catch (err) {
+    res.status(500).send(err);
+  }
 })
+
+//Reset attendance for a student !
+app.put('/students/reset', async (req, res) => {
+    try {
+      const updateStudent = await Student.findByIdAndUpdate(tagId, req.body, {attendance :false});
+      res.status(201).send(updateStudent)
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ err });
+    }
+});
  
 // Delete a student
-app.delete('/students/:tagId', (req, res) => {
-  Student.findOneAndRemove({ tagId }, (err, student) => {
-    if (err) {
-      res.status(500).send(err);
-    } else if (student) {
-      res.status(200).send({ message: 'Student deleted' });
-    } else {
-      res.status(404).send({ message: 'Student not found' });
+app.delete('/students/:tagId', async (req, res) => {
+    const tagId = req.body.tagId
+    try {
+      await Student.findOneAndRemove({tagId})
+      res.send({ message: 'User deleted successfully' });
+    } catch (err) {
+      res.status(404).json({ error: err.message });
     }
-  });
 });
 
 server.listen(PORT, () => {

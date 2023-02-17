@@ -15,12 +15,14 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 // WebSocket client
 WebSocketsClient webSocket;
 
-int ledPin = 2;
+int redLedPin = 2;
+int greenLedPin = 4;
 bool ledState = false;
 
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
+  pinMode(redLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
   Serial.begin(115200);
   delay(10);
 
@@ -74,7 +76,6 @@ void loop() {
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
   }
-  //webSocket.sendTXT("0000001111111");
   webSocket.loop();
 }
 
@@ -89,14 +90,17 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
     case WStype_TEXT:
       Serial.print("Received message from server: ");
       Serial.println((char*)payload);
-      if (strcmp((char*)payload, "ON") == 0) {
-        ledState = true;
-        digitalWrite(ledPin, HIGH);
-        delay(500);
-        digitalWrite(ledPin, LOW);
-      } else if (strcmp((char*)payload, "OFF") == 0) {
-        ledState = false;
-        digitalWrite(ledPin, LOW);
+      if (strcmp((char*)payload, "GREEN_ON") == 0) {
+        digitalWrite(greenLedPin, HIGH);
+        delay(1000);
+      } else if (strcmp((char*)payload, "GREEN_OFF") == 0) {
+        digitalWrite(greenLedPin, LOW);
+      } else if (strcmp((char*)payload, "RED_ON") == 0) {
+        digitalWrite(redLedPin, HIGH);
+        delay(1000);
+      } else if (strcmp((char*)payload, "RED_OFF") == 0) {
+        digitalWrite(redLedPin, LOW);
+        delay(1000);
       }
       break;
   }
