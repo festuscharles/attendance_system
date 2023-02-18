@@ -60,6 +60,30 @@ wss.on('connection', (ws) => {
 // Index page
 app.get('/', (req, res) => {
   try {
+    ws.on('message', (message) => {
+      console.log(`Received tag Id: ${message}`);
+      ws.send('GREEN_ON'); // turn the green LED on
+      ws.send('GREEN_OFF'); // turn the green LED off
+      console.log("Green Light on") 
+
+      global.tagId = message
+      
+      if (!message) {
+        ws.send('RED_ON'); // turn the red LED on
+        console.log("Red Light on")
+      }
+    // Broadcast tag Id to all connected clients
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  });
+
+  // Handle disconnections
+  ws.on('close', () => {
+    console.log('Client disconnected.');
+  });
     res.status(201).send("Index page");
   } catch (err) {
     res.status(500).json({ error: err.message });
