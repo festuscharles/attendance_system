@@ -48,7 +48,7 @@ void setup() {
   // Connect to WebSocket server
   // server address, port and URL
   //webSocket.begin("192.168.43.171", 81, "/");
-  webSocket.begin("wss://attendance-system-zmr0.onrender.com", 10000, "/");
+  webSocket.begin("https://attendance-system-zmr0.onrender.com", 10000, "/");
 
   // event handler
   webSocket.onEvent(onWebSocketEvent);
