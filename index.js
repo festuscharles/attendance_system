@@ -84,7 +84,7 @@ app.get('/', (req, res) => {
   ws.on('close', () => {
     console.log('Client disconnected.');
   });
-    res.status(201).send("Index page");
+    res.status(201).send(tagId);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
